@@ -51,6 +51,8 @@ fn initialize(app_dir: &str, custom_client_config: &str) {
     } else {
         crate::read_custom_client(custom_client_config);
     }
+    // Avant IT: servidor de Avant y sin búsqueda de actualizaciones
+    crate::avant::sembrar();
     #[cfg(target_os = "android")]
     {
         // flexi_logger can't work when android_logger initialized.
@@ -2971,6 +2973,8 @@ pub mod server_side {
                 crate::read_custom_client(&custom_client_config);
             }
         }
+        // Avant IT: el servicio también arranca solo (al encender), sin pasar por initialize()
+        crate::avant::sembrar();
         std::thread::spawn(move || start_server(true));
     }
 
