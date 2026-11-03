@@ -32,3 +32,28 @@ pub fn sembrar() {
     let mut locales = config::OVERWRITE_LOCAL_SETTINGS.write().unwrap();
     locales.insert("enable-check-update".to_owned(), "N".to_owned());
 }
+
+/// Datos que pone el MDM de Avant en los «Application settings» de la app (managed configurations):
+/// `contrasena` (la estándar de acceso desatendido), `nombre` (local y equipo) y `grupo` (local). La
+/// contraseña no va en este código público: solo llega del MDM. Se llama desde Android al arrancar el
+/// servicio y cada vez que el MDM cambia esos ajustes.
+pub fn aplicar_mdm(contrasena: &str, nombre: &str, grupo: &str) {
+    use hbb_common::config::Config;
+    let contrasena = contrasena.trim();
+    if !contrasena.is_empty() {
+        if !Config::set_permanent_password(contrasena) {
+            hbb_common::log::warn!("Avant: no se ha podido poner la contraseña permanente del MDM");
+        }
+        // Solo con la contraseña permanente, sin aviso para aceptar en la pantalla del equipo
+        Config::set_option("verification-method".to_owned(), "use-permanent-password".to_owned());
+        Config::set_option("approve-mode".to_owned(), "password".to_owned());
+    }
+    let nombre = nombre.trim();
+    if !nombre.is_empty() && Config::get_option("preset-device-name") != nombre {
+        Config::set_option("preset-device-name".to_owned(), nombre.to_owned());
+    }
+    let grupo = grupo.trim();
+    if !grupo.is_empty() && Config::get_option("preset-device-group-name") != grupo {
+        Config::set_option("preset-device-group-name".to_owned(), grupo.to_owned());
+    }
+}

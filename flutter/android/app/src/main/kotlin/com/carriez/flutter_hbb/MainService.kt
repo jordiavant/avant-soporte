@@ -254,6 +254,9 @@ class MainService : Service() {
         val homePath = applicationContext.getExternalFilesDir(null)?.absolutePath
             ?: applicationContext.filesDir.absolutePath
         FFI.startServer(configPath, homePath, "")
+        // Avant IT: contraseña, nombre y grupo desde el MDM de Avant (y cuando cambien)
+        AvantMdm.aplicar(applicationContext)
+        AvantMdm.escucharCambios(applicationContext)
 
         createForegroundNotification()
     }

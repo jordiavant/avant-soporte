@@ -2978,6 +2978,25 @@ pub mod server_side {
         std::thread::spawn(move || start_server(true));
     }
 
+    // Avant IT: aplica la contraseña, el nombre y el grupo que manda el MDM de Avant
+    #[no_mangle]
+    pub unsafe extern "system" fn Java_ffi_FFI_avantAplicarMdm(
+        env: JNIEnv,
+        _class: JClass,
+        contrasena: JString,
+        nombre: JString,
+        grupo: JString,
+    ) {
+        let mut env = env;
+        let mut leer = |s: &JString| -> String {
+            env.get_string(s).map(|v| v.into()).unwrap_or_default()
+        };
+        let contrasena = leer(&contrasena);
+        let nombre = leer(&nombre);
+        let grupo = leer(&grupo);
+        crate::avant::aplicar_mdm(&contrasena, &nombre, &grupo);
+    }
+
     #[no_mangle]
     pub unsafe extern "system" fn Java_ffi_FFI_startService(_env: JNIEnv, _class: JClass) {
         log::debug!("startService from jvm");

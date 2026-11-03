@@ -17,6 +17,8 @@ object FFI {
     external fun setClipboardManager(clipboardManager: RdClipboardManager)
     external fun startServer(app_dir: String, home_dir: String, custom_client_config: String)
     external fun startService()
+    // Avant IT: contraseña, nombre y grupo desde el MDM de Avant
+    external fun avantAplicarMdm(contrasena: String, nombre: String, grupo: String)
     external fun onVideoFrameUpdate(buf: ByteBuffer)
     external fun onAudioFrameUpdate(buf: ByteBuffer)
     external fun translateLocale(localeName: String, input: String): String
