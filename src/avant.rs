@@ -8,6 +8,15 @@
 // al encender el equipo), que en Android van por caminos distintos.
 
 use hbb_common::config;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+/// Pide a la sincronización con el servidor que vuelva a enviar los datos del equipo (nombre y grupo
+/// del MDM), que si no solo se envían una vez por arranque y pueden salir antes de que lleguen.
+pub static REENVIAR_DATOS: AtomicBool = AtomicBool::new(false);
+
+pub fn tomar_reenvio() -> bool {
+    REENVIAR_DATOS.swap(false, Ordering::SeqCst)
+}
 
 /// Servidor de Avant IT (hbbs/hbbr en vpnavant, detrás de nginx para la API).
 pub const SERVIDOR: &str = "remote.avant-it.net";
@@ -49,11 +58,20 @@ pub fn aplicar_mdm(contrasena: &str, nombre: &str, grupo: &str) {
         Config::set_option("approve-mode".to_owned(), "password".to_owned());
     }
     let nombre = nombre.trim();
-    if !nombre.is_empty() && Config::get_option("preset-device-name") != nombre {
-        Config::set_option("preset-device-name".to_owned(), nombre.to_owned());
+    if !nombre.is_empty() {
+        if Config::get_option("preset-device-name") != nombre {
+            Config::set_option("preset-device-name".to_owned(), nombre.to_owned());
+        }
+        REENVIAR_DATOS.store(true, Ordering::SeqCst);
     }
+    // El grupo lo lee la sincronización con el servidor de los ajustes «de fábrica» (BUILTIN_SETTINGS),
+    // no de las opciones normales; en memoria basta porque se aplica en cada arranque del servicio.
     let grupo = grupo.trim();
-    if !grupo.is_empty() && Config::get_option("preset-device-group-name") != grupo {
-        Config::set_option("preset-device-group-name".to_owned(), grupo.to_owned());
+    if !grupo.is_empty() {
+        hbb_common::config::BUILTIN_SETTINGS
+            .write()
+            .unwrap()
+            .insert("preset-device-group-name".to_owned(), grupo.to_owned());
+        REENVIAR_DATOS.store(true, Ordering::SeqCst);
     }
 }

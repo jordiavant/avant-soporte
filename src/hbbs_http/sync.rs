@@ -127,8 +127,11 @@ async fn start_hbbs_sync_async() {
                 let sys_username = v["username"].as_str().unwrap_or_default().to_string();
                 // Though the username comparison is only necessary on Windows,
                 // we still keep the comparison on other platforms for consistency.
-                let need_upload = (!info_uploaded.uploaded || info_uploaded.username.as_ref() != Some(&sys_username)) &&
-                    info_uploaded.last_uploaded.map(|x| x.elapsed() >= UPLOAD_SYSINFO_TIMEOUT).unwrap_or(true);
+                // Avant IT: también cuando llegan del MDM el nombre o el grupo del equipo
+                let puede_subir = info_uploaded.last_uploaded.map(|x| x.elapsed() >= UPLOAD_SYSINFO_TIMEOUT).unwrap_or(true);
+                let reenvio_avant = puede_subir && crate::avant::tomar_reenvio();
+                let need_upload = (!info_uploaded.uploaded || info_uploaded.username.as_ref() != Some(&sys_username) || reenvio_avant) &&
+                    puede_subir;
                 if need_upload {
                     v["version"] = json!(crate::VERSION);
                     v["id"] = json!(id);
