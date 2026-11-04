@@ -250,7 +250,13 @@ class MainService : Service() {
 
         // keep the config dir same with flutter
         val prefs = applicationContext.getSharedPreferences(KEY_SHARED_PREFERENCES, FlutterActivity.MODE_PRIVATE)
-        val configPath = prefs.getString(KEY_APP_DIR_CONFIG_PATH, "") ?: ""
+        var configPath = prefs.getString(KEY_APP_DIR_CONFIG_PATH, "") ?: ""
+        if (configPath.isEmpty()) {
+            // Avant IT: el servicio arranca solo sin que la app se haya abierto nunca. Sin carpeta no guarda
+            // su identidad y el ID cambia en cada arranque: se usa la misma que usaría la interfaz.
+            configPath = applicationContext.getDir("flutter", Context.MODE_PRIVATE).absolutePath
+            prefs.edit().putString(KEY_APP_DIR_CONFIG_PATH, configPath).apply()
+        }
         val homePath = applicationContext.getExternalFilesDir(null)?.absolutePath
             ?: applicationContext.filesDir.absolutePath
         FFI.startServer(configPath, homePath, "")
