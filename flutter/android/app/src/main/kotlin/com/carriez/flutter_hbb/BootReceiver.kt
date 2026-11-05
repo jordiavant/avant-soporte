@@ -19,7 +19,10 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Log.d(logTag, "onReceive ${intent.action}")
 
-        if (Intent.ACTION_BOOT_COMPLETED == intent.action || DEBUG_BOOT_COMPLETED == intent.action) {
+        // Avant IT: al actualizarse, Android para el servicio y no vuelve solo (START_NOT_STICKY); sin esto el equipo
+        // se queda sin acceso remoto hasta el siguiente reinicio.
+        if (Intent.ACTION_BOOT_COMPLETED == intent.action || DEBUG_BOOT_COMPLETED == intent.action
+            || Intent.ACTION_MY_PACKAGE_REPLACED == intent.action) {
             // check SharedPreferences config
             val prefs = context.getSharedPreferences(KEY_SHARED_PREFERENCES, FlutterActivity.MODE_PRIVATE)
             // Avant IT: arrancar al encender viene activado de serie
